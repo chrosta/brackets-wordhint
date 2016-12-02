@@ -1,7 +1,4 @@
 brackets-wordhint
 =================
 
-Hint with words in current document. Add autocomplete for PHP, Python, Perl etc.
-Also a good example for CodeHintManager. 
-
-Next Step: order autocomplete results by distance to cursor.
+This extension adds words autocomplete regardless language (it usable for Perl, PHP, Python, etc). Based on [Bigeyex project](https://github.com/bigeyex/brackets-wordhint).

@@ -2,7 +2,9 @@
  * Licenced under MIT
  * Author: Wang Yu <bigeyex@gmail.com>
  * github: https://github.com/bigeyex/brackets-wordhint
-*/
+ * github: https://github.com/ShouheiHayashi/brackets-wordhint (fork)
+ * github: https://github.com/chrosta/brackets-wordhint (fork)
+ */
 
 /*
  * Copyright (c) 2013 Adobe Systems Incorporated. All rights reserved.
@@ -24,27 +26,37 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
  * DEALINGS IN THE SOFTWARE.
- * 
  */
 
-/*jslint vars: true, plusplus: true, devel: true, nomen: true, indent: 4, maxerr: 50, regexp: true */
-/*global define, brackets, $, window */
-
+/* jslint vars: true, plusplus: true, devel: true, nomen: true, indent: 4, maxerr: 50, regexp: true */
+/* global define, brackets, $, window */
 define(function (require, exports, module) {
-    "use strict";
+	"use strict";
+	
+    /* My word hinter instace. */
+	var wordHints;
+    	
+    /* Definig own module command id and name. */
+    var MyCommandId = "extension.wordhint",
+        MyCommandName = "Word hints",
+        MyCommandShortcut = "Ctrl-Space";
 
-    var AppInit             = brackets.getModule("utils/AppInit"),
-        CodeHintManager     = brackets.getModule("editor/CodeHintManager"),
-        LanguageManager     = brackets.getModule("language/LanguageManager");
+    var AppInit = brackets.getModule("utils/AppInit"),
+        CodeHintManager = brackets.getModule("editor/CodeHintManager"),
+        LanguageManager = brackets.getModule("language/LanguageManager"),
+        CommandManager = brackets.getModule("command/CommandManager"),
+        Menus = brackets.getModule("command/Menus"),
+        Menu = Menus.getMenu(Menus.AppMenuBar.VIEW_MENU);
     
     var lastLine,
         lastFileName,
+        ctrlSpaceFlag,
         cachedMatches,
         cachedWordList,
         tokenDefinition,
         currentTokenDefinition;
-       // CSSProperties       = require("text!CSSProperties.json"),
-       // properties          = JSON.parse(CSSProperties);
+        // CSSProperties = require("text!CSSProperties.json"),
+        // properties = JSON.parse(CSSProperties);
     
     /**
      * @constructor
@@ -52,15 +64,21 @@ define(function (require, exports, module) {
     function WordHints() {
         this.lastLine = 0;
         this.lastFileName = "";
+        this.ctrlSpaceFlag = false;
         this.cachedMatches = [];
         this.cachedWordList = [];
         this.tokenDefinition = /[\$a-zA-Z][\-a-zA-Z0-9_]*[a-zA-Z0-9_]+/g;
         this.currentTokenDefinition = /[\$a-zA-Z]+$/g;
     }
-    
+	
+    /* And my command shortcut handler. */
+    function myCommandShortcutHandler() {
+        if (wordHints !== null) {
+            
+        }
+    }
     
     /**
-     * 
      * @param {Editor} editor 
      * A non-null editor object for the active window.
      *
@@ -78,9 +96,10 @@ define(function (require, exports, module) {
         this.editor = editor;
         var cursor = this.editor.getCursorPos();
         
-        // if it is not the same line as the last input - rebuild word list
+        // if it is not the same line as the last input, rebuild word list!
         if(cursor.line != this.lastLine){
             var rawWordList = editor.document.getText().match(this.tokenDefinition);
+			console.log(rawWordList);
             this.cachedWordList = [];
             for(var i in rawWordList){
                var word = rawWordList[i]; 
@@ -91,8 +110,8 @@ define(function (require, exports, module) {
         }
         this.lastLine = cursor.line;
         
-        // if has entered more than 1 characters - start completion
-        var lineBeginning = {line:cursor.line,ch:0};
+        // if has entered more than 1 characters, start completion!
+        var lineBeginning = {line:cursor.line, ch:0};
         var textBeforeCursor = this.editor.document.getRange(lineBeginning, cursor);
         var symbolBeforeCursorArray = textBeforeCursor.match(this.currentTokenDefinition);
         if(symbolBeforeCursorArray){
@@ -103,8 +122,6 @@ define(function (require, exports, module) {
                 }
             }
         }
-        
-        
         return false;
     };
        
@@ -134,18 +151,17 @@ define(function (require, exports, module) {
      */
     WordHints.prototype.getHints = function (implicitChar) {
         var cursor = this.editor.getCursorPos();
-        var lineBeginning = {line:cursor.line,ch:0};
+        var lineBeginning = {line:cursor.line, ch:0};
         var textBeforeCursor = this.editor.document.getRange(lineBeginning, cursor);
         var symbolBeforeCursorArray = textBeforeCursor.match(this.currentTokenDefinition);
         var hintList = [];
         if(symbolBeforeCursorArray === null) return null;
         if(cachedWordList === null) return null;
-        for(var i in this.cachedWordList){
+		for(var i in this.cachedWordList){
             if(this.cachedWordList[i].toLowerCase().indexOf(symbolBeforeCursorArray[0].toLowerCase())==0){
                 hintList.push(this.cachedWordList[i]);
             }
         }
-
         return {
             hints: hintList,
             match: symbolBeforeCursorArray[0],
@@ -173,12 +189,16 @@ define(function (require, exports, module) {
         if(indexOfTheSymbol == -1) return false;
         this.editor.document.replaceRange(hint, replaceStart, cursor);
         console.log("hint: "+hint+" | lineBeginning: "+lineBeginning.line+', '+lineBeginning.ch+" | textBeforeCursor: "+textBeforeCursor+" | indexOfTheSymbol: "+indexOfTheSymbol+" | replaceStart: "+replaceStart.line+', '+replaceStart.ch);
-        
         return false;
     };
     
     AppInit.appReady(function () {
-        var wordHints = new WordHints();
+        wordHints = new WordHints();
         CodeHintManager.registerHintProvider(wordHints, ["all"], 0);
     });
+	
+    /* Bind this word hinter with shorcut and add to menu. */
+    CommandManager.register(MyCommandName, MyCommandId, myCommandShortcutHandler);
+    Menu.addMenuItem(MyCommandId);
+    Menu.addMenuItem(MyCommandId, MyCommandShortcut);
 });

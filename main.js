@@ -68,16 +68,27 @@ define(function (require, exports, module) {
 		}
 		*/
 		if (codeHintList != null && codeHintList.isOpen()) {
-			console.log("Closing my code hints after " + MyCommandShortcut + "!"); a
+			console.log("Close my code hints after " + MyCommandShortcut + "!");
 			codeHintList.close();
 		} else {
 			if (wordHints != null) {
 				if (wordHints.hasHints(EditorManager.getActiveEditor(), null)) {
-					console.log("Opening my code hints!");
+					console.log("Open my code hints!");
 					codeHintList = new CodeHintList(EditorManager.getActiveEditor(), false, Number.MAX_VALUE);
+					codeHintList.onSelect(function(hint) {
+						console.log("Hint: " + hint);
+						var cursor = codeHintList.editor.getCursorPos();
+						var lineBeginning = {line:cursor.line, ch:0};
+						var textBeforeCursor = codeHintList.editor.document.getRange(lineBeginning, cursor);
+						var indexOfTheSymbol = textBeforeCursor.search(wordHints.currentTokenDefinition);
+						var replaceStart = {line:cursor.line, ch:indexOfTheSymbol};
+						codeHintList.editor.document.replaceRange(hint, replaceStart, cursor);
+						codeHintList.close();
+						console.log("Close my code hints after hint select!");
+					});
 					codeHintList.onClose(function() {
-						console.log("Closing my code hints after Esc!");
-						this.close();
+						console.log("Close my code hints after Esc!"); associated
+						codeHintList.close();
 					});
 					codeHintList.open(wordHints.getHints(null));
 				}
@@ -196,10 +207,10 @@ define(function (require, exports, module) {
 		 */
 		WordHints.prototype.insertHint = function(hint) {
 			var cursor = this.editor.getCursorPos();
-			var lineBeginning = {line:cursor.line,ch:0};
+			var lineBeginning = {line:cursor.line, ch:0};
 			var textBeforeCursor = this.editor.document.getRange(lineBeginning, cursor);
 			var indexOfTheSymbol = textBeforeCursor.search(this.currentTokenDefinition);
-			var replaceStart = {line:cursor.line,ch:indexOfTheSymbol};
+			var replaceStart = {line:cursor.line, ch:indexOfTheSymbol};
 			if(indexOfTheSymbol == -1) return false;
 			this.editor.document.replaceRange(hint, replaceStart, cursor);
 			console.log("hint: "+hint+" | lineBeginning: "+lineBeginning.line+', '+lineBeginning.ch+" | textBeforeCursor: "+textBeforeCursor+" | indexOfTheSymbol: "+indexOfTheSymbol+" | replaceStart: "+replaceStart.line+', '+replaceStart.ch);

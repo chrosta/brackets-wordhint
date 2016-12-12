@@ -8,3 +8,5 @@ changes, tips
 * You can set this in Brackets keymaps (use "Ctrl-Space": "extension.wordhint").
 * Package JSON changes.
 * Shortcut handler working with code hint list.
+* Opening a closing hints with Ctrl-Space, Esc and after hint select.
+* Pasting hint at cursor by original rules.
